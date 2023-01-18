@@ -12,14 +12,14 @@ class CommentReplies extends Model
     protected $table = 'comment_replies';
 
     protected $casts =[
-        'auth_id'=>'int',
+        'user_id'=>'int',
         'comment_id'=> 'int',
         'post_id'=>'int'
     ];
 
     protected $fillable = [
         'reply',
-        'auth_id',
+        'user_id',
         'comment_id',
         'post_id'
     ];

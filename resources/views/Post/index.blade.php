@@ -1,13 +1,16 @@
-@extends('layout')
+@extends('layouts.dashboard')
 @section('content')
-    <div class="row">
+    <div class="row py-lg-2">
         <div class="col-lg-12 mb-2">
-            <div class="float-star">
-                <h2>Post</h2>
+            <div class="float-start">
+                <h2>Post List</h2>
             </div>
-            <div class="float-end">
-                <a class="btn btn-success" href="#"> Create a New Post</a>
-            </div>
+            @can('add-post')
+                <div class="float-end">
+                    <a href="{{ route('post.create') }}"" class="btn btn-primary btn-lg float-md-right" role="button"
+                        aria-pressed="true">Create New Post</a>
+                </div>
+            @endcan
         </div>
     </div>
     <table class="table table-border mt-2">
@@ -15,9 +18,6 @@
             <th>STT</th>
             <th>Tittle</th>
             <th>Post User</th>
-            <th>Like</th>
-            <th>Share</th>
-            <th>Comment</th>
             <th>Action</th>
         </tr>
         @foreach ($posts as $post)
@@ -25,17 +25,18 @@
                 <td>{{ $post->id }}</td>
                 <td>{{ $post->title }}</td>
                 <td>{{ $post->user->name }}</td>
-                <td>{{ $like }}</td>
-                <td>{{ $post->share->count() }}</td>
-                <td>@php($total = $post->comment->count() + $post->comment_replies->count()) {{ $total }}</td>
                 <td>
-                    {{-- <form action="#" method="POST"> --}}
-                        <a class="btn btn-info" href="#">Show</a>
-                        <a class="btn btn-warning" href="#">Edit</a>
+                    <form action="{{ route('post.delete', $post->id) }}" method="POST">
+                        <a class="btn btn-info" href="{{ route('post.show', $post->id) }}">Show</a>
+                        @can('edit-post')
+                            <a class="btn btn-warning" href="{{ route('post.edit', $post->id) }}">Edit</a>
+                        @endcan
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="btn btn-danger">Delete</button>
-                    {{-- </form> --}}
+                        @can('delete-post')
+                            <button type="submit" class="btn btn-danger">Delete</button>
+                        @endcan
+                    </form>
                 </td>
             </tr>
         @endforeach

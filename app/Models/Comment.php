@@ -12,13 +12,13 @@ class Comment extends Model
     protected $table = 'comment';
 
     protected $casts =[
-        'auth_id'=>'int',
+        'user_id'=>'int',
         'post_id'=>'int'
     ];
 
     protected $fillable = [
         'body',
-        'auth_id'
+        'user_id'
     ];
 
     //relation

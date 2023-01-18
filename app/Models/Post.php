@@ -10,23 +10,22 @@ class Post extends Model
 {
     use HasFactory;
     protected $table = 'post';
-    
     protected $casts =[
-        'auth_id'=>'int'
+        'user_id'=>'int'
     ];
     
     protected $fillable = [
         'title',
         'content',
-        'auth_id'
+        'user_id'
     ];
 
     ///relation
     /**
-     * @return hasOne
+     * @return belongsTo
      */
      public function user(){
-        return $this->hasOne('App\Models\User','id');
+        return $this->belongsTo(User::class);
      }
      
      /**
@@ -40,14 +39,14 @@ class Post extends Model
       * @return hasMany
       */
      public function like(){
-        return $this->hasMany('App\Models\LikeUser','post_id');
+        return $this->hasMany(LikeUser::class);
      }
 
      /**
       * @return hasMany
      */
     public function share(){
-        return $this->hasMany('App\Models\Share','post_id');
+        return $this->hasMany(Share::class);
     }
     
     /**

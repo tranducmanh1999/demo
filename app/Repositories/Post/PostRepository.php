@@ -9,6 +9,6 @@ class PostRepository extends BaseRepository implements PostRepositoryInterface
         return \App\Models\Post::class;
     }
     public function getPostById(){
-        return $this->model->orderBy('id','desc')->get();
+        return $this->model->where('user_id')->orderBy('id','desc')->get();
     }
 }

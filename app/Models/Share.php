@@ -12,27 +12,27 @@ class Share extends Model
     protected $table = 'share';
     
     protected $casts =[
-        'auth_id'=>'int',
+        'user_id'=>'int',
         'post_id'=>'int'
     ];
     
     protected $fillable = [
-        'auth_id',
+        'user_id',
         'post_id'
     ];
 
     ///relation
     /**
-     * @return hasOne
+     * @return belongsTo
     */
     public function user(){
-        return $this->hasOne('App\Models\User','id');
+        return $this->belongsTo(User::class);
     }
     
     /**
-     * @return hasOne
+     * @return belongsTo
      */
     public function post(){
-        return $this->hasOne('App\Models\Post','id');
+        return $this->belongsTo(Post::class);
     }
 }

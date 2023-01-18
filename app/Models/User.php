@@ -2,15 +2,17 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use App\Permissions\HasPermissionsTrait;
 
-class User extends Authenticatable
+
+class User extends Authenticatable implements MustVerifyEmail
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable,HasPermissionsTrait;
 
     public $timestamps = true;
 
@@ -42,13 +44,21 @@ class User extends Authenticatable
     //relation
     
     /**
-     * @return belongsTo
+     * @return hasMany
      */
     
      public function post()
      {
-        return $this->belongsTo('App\Models\Post','auth_id');   
+        return $this->hasMany('App\Models\Post','user_id');   
      }
+
+     /**
+     * @return hasMany
+     */
+    public function like(){
+      return $this->hasMany('App\Models\LikeUser','user_id');
+    }
+      
      
      /**
       * @return belongsTo
@@ -70,4 +80,6 @@ class User extends Authenticatable
       public function share(){
         return $this->belongsTo(Share::class);
       }
+      
+
 }

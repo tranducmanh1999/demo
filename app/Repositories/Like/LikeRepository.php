@@ -9,6 +9,7 @@ class LikeRepository extends BaseRepository implements LikeRepositoryInterface
         return \App\Models\LikeUser::class;
     }
     public function countUser(){
-        return $this->model->distinct('auth_id')->count('auth_id');;
+        $post_id = \App\Models\Post::all();
+        return $this->model->where('post_id',$post_id)->get();
     }
 }

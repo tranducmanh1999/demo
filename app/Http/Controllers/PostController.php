@@ -7,13 +7,20 @@ use App\Repositories\Post\PostRepository;
 use App\Repositories\Like\LikeRepository;
 use Illuminate\Http\Request;
 use App\Models\LikeUser;
+use Auth;
+use App\Models\Share;
+use App\Models\User;
+use Carbon\Carbon;
+use App\Http\Requests\StorePostRequest;
+use App\Http\Requests\UpdatePostRequest;
 
 class PostController extends Controller
 {
-    protected $postRepo,$likeRepo;
+    protected $postRepo,$likeRepo,$userId;
     public function __construct(PostRepository $postRepo, LikeRepository $likeRepo){
         $this->postRepo = $postRepo;
         $this->likRepo = $likeRepo;
+        $this->middleware('auth');
     }
     /**
      * Display a listing of the resource.
@@ -23,8 +30,7 @@ class PostController extends Controller
     public function index()
     {
         $posts = $this->postRepo->getAll();
-        $like =  $this->likRepo->countUser();
-        return view('post.index',compact('posts','like'));
+        return view('post.index',compact('posts'));
     }
 
     /**
@@ -34,7 +40,10 @@ class PostController extends Controller
      */
     public function create()
     {
-        //
+        $user =  Auth::id();
+        $created_at = Carbon::now();
+        $updated_at = Carbon::now();
+        return view('post.create', compact('user','created_at','updated_at'));
     }
 
     /**
@@ -43,9 +52,11 @@ class PostController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(StorePostRequest $request)
     {
-        //
+        Post::create($request->all());
+        return redirect()->route('post.index')
+                        ->with('success','Post created successfully.');
     }
 
     /**
@@ -54,9 +65,12 @@ class PostController extends Controller
      * @param  \App\Models\Post  $post
      * @return \Illuminate\Http\Response
      */
-    public function show(Post $post)
+    public function show($id)
     {
-        //
+        $post = Post::find($id);
+        $countLike = LikeUser::with(['post','user'])->where('like_user.post_id','=',$id)->get();
+        $countShare = Share::with('post')->where('share.post_id','=',$id)->get();
+        return view('post.show',compact('post','countLike','countShare'));
     }
 
     /**
@@ -65,9 +79,10 @@ class PostController extends Controller
      * @param  \App\Models\Post  $post
      * @return \Illuminate\Http\Response
      */
-    public function edit(Post $post)
+    public function edit($id)
     {
-        //
+        $post = Post::findOrFail($id);
+        return view('post.edit',compact('post'));
     }
 
     /**
@@ -77,9 +92,12 @@ class PostController extends Controller
      * @param  \App\Models\Post  $post
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Post $post)
+    public function update(UpdatePostRequest $request, $id)
     {
-        //
+        $post = Post::findOrFail($id);
+        $post->update($request->all());
+        return redirect()->route('post.index')
+        ->with('success','Post updated successfully');
     }
 
     /**
@@ -88,8 +106,11 @@ class PostController extends Controller
      * @param  \App\Models\Post  $post
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Post $post)
+    public function destroy($id)
     {
-        //
+        $post = Post::findOrFail($id);
+        $post->delete();
+        return redirect()->route('post.index')
+        ->with('success','Post deleted successfully');
     }
 }

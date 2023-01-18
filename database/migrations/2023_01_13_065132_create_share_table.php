@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create('share', function (Blueprint $table) {
             $table->id();
             $table->integer('post_id');
-            $table->integer('auth_id');
+            $table->integer('user_id');
             $table->timestamps();
         });
     }
