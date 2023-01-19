@@ -4,14 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Role;
+use App\Models\Permission;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use App\Repositories\User\UserRepository;
 
 class UsersController extends Controller
 {
-    public function __construct()
+    protected $userRepo;
+    public function __construct(UserRepository $userRepo)
     {
         $this->middleware('auth');
+        $this->userRepo = $userRepo;
     }
     /**
      * Display a listing of the resource.
@@ -20,8 +24,7 @@ class UsersController extends Controller
      */
     public function index()
     {
-        $users = User::orderBy('id', 'asc')->get();
-
+        $users =  $this->userRepo->getAll();
         return view('users.index', ['users' => $users]);
     }
 
@@ -30,18 +33,11 @@ class UsersController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create(Request $request)
+    public function create()
     {
-        if($request->ajax()){
-            $roles = Role::where('id', $request->role_id)->first();
-            $permissions = $roles->permissions;
-
-            return $permissions;
-        }
-
         $roles = Role::all();
-        
-        return view('users.create', ['roles' => $roles]);
+        $permissions = Permission::all();
+        return view('users.create', ['roles' => $roles,'permissions' => $permissions]);
     }
 
     /**
@@ -55,23 +51,23 @@ class UsersController extends Controller
         $request->validate([
             'name' => 'required|max:255',
             'email' => 'required|unique:users|email|max:255',
-            'password' => 'required|between:8,255|confirmed',
+            'password' => 'required|between:4,255|confirmed',
             'password_confirmation' => 'required'
         ]);
 
-        $user = new User;
-        $user->name = $request->name;
-        $user->email = $request->email;
-        $user->password = Hash::make($request->password);
-        $user->save();
+        $user =  $this->userRepo->create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+        ]);
 
         if($request->role != null){
             $user->roles()->attach($request->role);
             $user->save();
         }
 
-        if($request->permissions != null){            
-            foreach ($request->permissions as $permission) {
+        if($request->permission != null){            
+            foreach ($request->permission as $permission) {
                 $user->permissions()->attach($permission);
                 $user->save();
             }
@@ -98,16 +94,12 @@ class UsersController extends Controller
      * @param  \App\User  $user
      * @return \Illuminate\Http\Response
      */
-    public function edit(User $user)
+    public function edit($id)
     {
+        $user =  $this->userRepo->find($id);
         $roles = Role::get();
         $userRole = $user->roles->first();
-        if($userRole != null){
-            $rolePermissions = $userRole->allRolePermissions;
-        }else{
-            $rolePermissions = null;
-        }
-        $userPermissions = $user->permissions;
+        $permissions = Permission::all();
 
         // dd($rolePermission);
 
@@ -115,8 +107,7 @@ class UsersController extends Controller
             'user'=>$user,
             'roles'=>$roles,
             'userRole'=>$userRole,
-            'rolePermissions'=>$rolePermissions,
-            'userPermissions'=>$userPermissions
+            'permissions' => $permissions
             ]);
     }
 
@@ -127,10 +118,10 @@ class UsersController extends Controller
      * @param  \App\User  $user
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, User $user)
+    public function update(Request $request, $id)
     {
+        $user =  $this->userRepo->find($id);
 
-        //validate the fields
         $request->validate([
             'name' => 'required|max:255',
             'email' => 'required|email|max:255',
@@ -142,23 +133,22 @@ class UsersController extends Controller
         if($request->password != null){
             $user->password = Hash::make($request->password);
         }
-        $user->save();
-
         $user->roles()->detach();
         $user->permissions()->detach();
-
         if($request->role != null){
+            
             $user->roles()->attach($request->role);
             $user->save();
         }
-
-        if($request->permissions != null){            
-            foreach ($request->permissions as $permission) {
+        if($request->permission != null){          
+            foreach ($request->permission as $permission) {
                 $user->permissions()->attach($permission);
                 $user->save();
             }
         }
-
+        
+        $user->save();
+    
         return redirect()->route('users.index')
         ->with('success','User updated successfully');
 
@@ -170,8 +160,9 @@ class UsersController extends Controller
      * @param  \App\User  $user
      * @return \Illuminate\Http\Response
      */
-    public function destroy(User $user)
+    public function destroy($id)
     {
+        $user =  $this->userRepo->find($id);
         $user->roles()->detach();
         $user->permissions()->detach();
         $user->delete();

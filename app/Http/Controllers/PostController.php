@@ -4,9 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Post;
 use App\Repositories\Post\PostRepository;
-use App\Repositories\Like\LikeRepository;
 use Illuminate\Http\Request;
-use App\Models\LikeUser;
 use Auth;
 use App\Models\Share;
 use App\Models\User;
@@ -17,9 +15,8 @@ use App\Http\Requests\UpdatePostRequest;
 class PostController extends Controller
 {
     protected $postRepo,$likeRepo,$userId;
-    public function __construct(PostRepository $postRepo, LikeRepository $likeRepo){
+    public function __construct(PostRepository $postRepo){
         $this->postRepo = $postRepo;
-        $this->likRepo = $likeRepo;
         $this->middleware('auth');
     }
     /**
@@ -67,7 +64,7 @@ class PostController extends Controller
      */
     public function show($id)
     {
-        $post = Post::find($id);
+        $post = $this->postRepo->find($id);
         $countLike = LikeUser::with(['post','user'])->where('like_user.post_id','=',$id)->get();
         $countShare = Share::with('post')->where('share.post_id','=',$id)->get();
         return view('post.show',compact('post','countLike','countShare'));
@@ -81,7 +78,7 @@ class PostController extends Controller
      */
     public function edit($id)
     {
-        $post = Post::findOrFail($id);
+        $post = $this->postRepo->find($id);
         return view('post.edit',compact('post'));
     }
 
@@ -94,7 +91,7 @@ class PostController extends Controller
      */
     public function update(UpdatePostRequest $request, $id)
     {
-        $post = Post::findOrFail($id);
+        $post = $this->postRepo->find($id);
         $post->update($request->all());
         return redirect()->route('post.index')
         ->with('success','Post updated successfully');
@@ -108,7 +105,7 @@ class PostController extends Controller
      */
     public function destroy($id)
     {
-        $post = Post::findOrFail($id);
+        $post = $this->postRepo->find($id);
         $post->delete();
         return redirect()->route('post.index')
         ->with('success','Post deleted successfully');

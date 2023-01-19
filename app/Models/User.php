@@ -8,6 +8,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use App\Permissions\HasPermissionsTrait;
+use App\Jobs\QueuedPasswordResetJob;
 
 
 class User extends Authenticatable implements MustVerifyEmail
@@ -81,5 +82,8 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->belongsTo(Share::class);
       }
       
-
+      public function sendPasswordResetNotification($token)
+    {
+        QueuedPasswordResetJob::dispatch($this,$token);
+    }
 }
